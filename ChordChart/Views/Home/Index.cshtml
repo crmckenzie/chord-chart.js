@@ -1,0 +1,60 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<script src="~/Scripts/chordcharts.js"></script>
+
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+<script src="http://code.jquery.com/jquery-2.0.3.min.js" type="text/javascript"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+<style>
+    .chord-chart {
+        width: 100px;
+    }
+    .guitar-fret {
+        width: 20px;
+    }
+</style>
+
+<div class="container">
+    <label>Chord<input type='text' id='chord' /></label>
+    <label>Position<input type='text' id='position' /></label>
+    <button type='button' id='update'>Update</button>
+</div>
+<div id="target" class='container row'>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        try {
+
+            var options = {
+                element: "#target"
+            };
+
+            var chart = chordChart(options);
+            chart.chord(['D', 'A', 'C#', 'B']);
+
+            $("#update").click(function () {
+                var chord = $("#chord").val()
+                  .split(',')
+                  .map(function (arg) {
+                      return arg.trim();
+                  });
+
+                chart.chord(chord);
+
+                var position = parseInt($("#position").val());
+                chart.position(position);
+            });
+
+
+        }
+        catch (e) {
+            alert(e.toString());
+
+        }
+    });
+</script>
