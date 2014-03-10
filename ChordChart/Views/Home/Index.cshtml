@@ -4,20 +4,17 @@
 
 <script src="~/Scripts/chordcharts.js"></script>
 
-
-<style>
-    .chord-chart {
-        width: 100px;
-    }
-    .guitar-fret {
-        width: 20px;
-    }
-</style>
+<div class='well'>
+    <p>Just enter the notes in the chord you wish to see and the position on the neck you wish to play in (default is 0). Use '#' and 'b' to indicate sharp or flat notes.</p>
+    <p>
+        Root notes are higlighted in a darker color.
+    </p>
+</div>
 
 <div class="container">
-    <label>Chord<input type='text' id='chord' value="CEG" /></label>
-    <label>Position<input type='text' id='position' value="0" /></label>
-    <button type='button' id='update'>Update</button>
+    <label>Root<input type='text' class="editor" placeholder="Example: C" id='key' value="C" /></label>
+    <label>Notes<input type='text' class="editor" placeholder="Example: CEG" id='chord' value="C#FAb" /></label>
+    <label>Neck Position<input type='text' class="editor" id='position' value="0" /></label>
 </div>
 <div id="target" class='container row'>
 </div>
@@ -41,7 +38,7 @@
                 chart.position(position);
             }
 
-            $("#update").click(function () {
+            $(".editor").focusout(function () {
                 updateFromUI();
             });
 

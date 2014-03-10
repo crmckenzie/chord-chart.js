@@ -1,0 +1,31 @@
+﻿.chord-chart {
+    width: 100px;
+}
+
+.guitar-fret {
+    width: 20px;
+}
+
+.chord-chart-cell {
+    margin-left: -25px;
+}
+
+.chord-chart-cell .highlight {
+    color: white;
+    background-color: grey;
+    font-weight: bold;
+    border-radius: 3px;
+    border-color: grey;
+    border-width: 1px;
+    text-align: center;
+}
+
+.chord-chart-cell .root {
+    color: white;
+    background-color: black;
+    font-weight: bold;
+    border-radius: 3px;
+    border-color: grey;
+    border-width: 1px;
+    text-align: center;
+}
