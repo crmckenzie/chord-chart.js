@@ -15,6 +15,7 @@
     <label>Root<input type='text' class="editor" placeholder="Example: C" id='key' value="C" /></label>
     <label>Notes<input type='text' class="editor" placeholder="Example: CEG" id='chord' value="C#FAb" /></label>
     <label>Neck Position<input type='text' class="editor" id='position' value="0" /></label>
+    <label>Size<input type='text' class="editor" id='size' value="5" /></label>
 </div>
 <div id="target" class='container row'>
 </div>
@@ -36,6 +37,9 @@
                 var rawValue = $("#position").val();
                 var position = parseInt(rawValue);
                 chart.position(position);
+
+                var size = $("#size").val();
+                chart.size(size);
             }
 
             $(".editor").focusout(function () {

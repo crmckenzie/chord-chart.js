@@ -274,7 +274,7 @@
         }
 
         function setIntervals(value) {
-            var expression = /^[A-Za-z]:\d(,\d)*$/;
+            var expression = /^[A-Za-z]:(b|#)?\d(,(b|#)?\d)*$/;
             
             if (expression.test(value)) {
                 key = value[0];
