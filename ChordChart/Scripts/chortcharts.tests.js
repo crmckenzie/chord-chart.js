@@ -9,8 +9,10 @@ test("Mode.getStepsFromRoot", function () {
     var expectations = [
         { arg: 1, result: 0 },
         { arg: 2, result: 2 },
+        { arg: 'b3', result: 3 },
         { arg: 3, result: 4 },
         { arg: 4, result: 5 },
+        { arg: '#4', result: 6 },
         { arg: 5, result: 7 },
         { arg: 6, result: 9 },
         { arg: 7, result: 11 },
@@ -23,6 +25,7 @@ test("Mode.getStepsFromRoot", function () {
         equal(result, expectation.result);
     });
 });
+
 
 test("ChromaticScale.indexOf", function() {
     var scale = new isg.guitar.ChromaticScale();
@@ -69,14 +72,17 @@ test("ChromaticScale.intervalToNote", function () {
     var scale = new isg.guitar.ChromaticScale();
 
     var expectations = [
-        //{ arg: 1, result: 'C' },
-        //{ arg: 2, result: 'D' },
-        //{ arg: 3, result: 'E' },
-        //{ arg: 4, result: 'F' },
-        //{ arg: 5, result: 'G' },
-        //{ arg: 6, result: 'A' },
-        //{ arg: 7, result: 'B' },
-        //{ arg: 8, result: 'C' },
+        { arg: 1, result: 'C' },
+        { arg: 2, result: 'D' },
+        { arg: 'b3', result: 'Eb' },
+        { arg: 3, result: 'E' },
+        { arg: 4, result: 'F' },
+        { arg: 5, result: 'G' },
+        { arg: 6, result: 'A' },
+        { arg: 'b7', result: 'Bb' },
+        { arg: 7, result: 'B' },
+        { arg: '#7', result: 'C' },
+        { arg: 8, result: 'C' },
         { arg: 9 , result: 'D' },
         { arg: 10, result: 'E' },
         { arg: 11, result: 'F' }
@@ -91,7 +97,33 @@ test("ChromaticScale.intervalToNote", function () {
 
 });
 
-test("Create isg.guitar.String", function() {
+test("ChromaticScale.noteToInterval", function() {
+    var scale = new isg.guitar.ChromaticScale();
+
+    var expectations = [
+        { arg: 1, result: 'C' },
+        { arg: 2, result: 'D' },
+        { arg: 3, result: 'E' },
+        { arg: 4, result: 'F' },
+        { arg: 5, result: 'G' },
+        { arg: 6, result: 'A' },
+        { arg: 7, result: 'B' },
+        { arg: 8, result: 'C' },
+        { arg: 9, result: 'D' },
+        { arg: 10, result: 'E' },
+        { arg: 11, result: 'F' }
+    ];
+
+    $.each(expectations, function (i, expectation) {
+        var mode = new isg.guitar.Mode();
+        var key = 'C';
+        var result = scale.intervalToNote(expectation.arg, key, mode);
+        equal(result, expectation.result, expectation.arg);
+    });
+});
+
+
+test("String: ctor", function() {
     var e = new isg.guitar.String('E');
     ok(e);
 });
@@ -131,10 +163,28 @@ test("String.getNoteAtInterval", function() {
     });
 });
 
+
 test("Chart: get notes", function() {
     var chart = new isg.guitar.Chart();
     var notes = chart.notes();
     deepEqual(notes, []);
+});
+
+test("Chart: set key", function() {
+    var chart = new isg.guitar.Chart();
+    chart.key('G');
+    var key = chart.key();
+    equal(key, 'G');
+});
+
+test("Chart: setting notes also sets intervals", function() {
+    var chart = new isg.guitar.Chart();
+    var value = ['C', 'E', 'G'];
+
+    chart.notes(value);
+
+    var intervals = chart.intervals();
+    deepEqual(intervals, [1, 3, 5]);
 });
 
 test("Chart: set notes as array", function() {
@@ -177,9 +227,9 @@ test("Chart: set notes using alternate names", function() {
     deepEqual(notes, value);
 });
 
-test("Chart: set intervals", function() {
+test("Chart: set intervals using comma delimited string", function() {
     var chart = new isg.guitar.Chart();
-    chart.intervals("C:1,3,5,7");
+    chart.intervals("1,3,5,7");
 
     var expectedNotes = ["C","E","G", "B"];
     var notes = chart.notes();
@@ -187,11 +237,31 @@ test("Chart: set intervals", function() {
     deepEqual(notes, expectedNotes);
 });
 
-test("Chart: set intervals with flats", function() {
+test("Chart: set intervals using array", function () {
     var chart = new isg.guitar.Chart();
-    chart.intervals("C:1,3,5,b7");
+    chart.intervals([1,3,5,7]);
+
+    var expectedNotes = ["C", "E", "G", "B"];
+    var notes = chart.notes();
+
+    deepEqual(notes, expectedNotes);
+});
+
+test("Chart: set intervals with flats", function () {
+    var chart = new isg.guitar.Chart();
+    chart.intervals("1,3,5,b7");
 
     var expectedNotes = ["C", "E", "G", "Bb"];
+    var notes = chart.notes();
+
+    deepEqual(notes, expectedNotes);
+});
+
+test("Chart: set intervals with sharps", function () {
+    var chart = new isg.guitar.Chart();
+    chart.intervals("1,3,5,#7");
+
+    var expectedNotes = ["C", "E", "G", "C"];
     var notes = chart.notes();
 
     deepEqual(notes, expectedNotes);

@@ -80,16 +80,12 @@
         return note;
     };
 
+    ChromaticScale.prototype.noteToInterval = function(note, key, model) {
+        return 1;
+    };
+
     var chromaticScale = new ChromaticScale();
 
-    function sum(array) {
-        var result = 0;
-        $.each(array, function(i, e) {
-            result += e;
-        });
-        return result;
-    }
-    
     function Mode(options) {
         var self = this;
         
@@ -97,37 +93,52 @@
             intervals: [2, 2, 1, 2, 2, 2, 1] // root: whole whole half whole whole whole half
         };
 
-        var settings = $.extend({}, defaults, options);
+        self.settings = $.extend({}, defaults, options);
 
-        function getStepsFromRoot(interval) {
-
-            var i = 0;
-            var result = 0;
-            var intervalIndex = 0;
-            while (i < interval - 1) {
-                if (i == settings.intervals.length) {
-                    intervalIndex = 0;
-                }
-                result += settings.intervals[intervalIndex];
-                i++;
-                intervalIndex++;
-            }
-            return result;
-        }
-
-        return {
-            getStepsFromRoot: getStepsFromRoot
-        };
     }
 
-    var standardTuning = [
-        new GuitarString('E'),
-        new GuitarString('A'),
-        new GuitarString('D'),
-        new GuitarString('G'),
-        new GuitarString('B'),
-        new GuitarString('E')
-    ];
+    var intervalExpression = /^(b|#)?\d+$/;
+
+    function sharpenOrFlatten(str) {
+        var result = 0;
+        if (str[0] == 'b') {
+            result = -1;
+        }
+        else if (str[0] == '#') {
+            result = 1;
+        }
+        return result;
+    }
+
+
+    Mode.prototype.getStepsFromRoot = function (interval) {
+        var self = this;
+
+        var intervalAsString = interval.toString();
+
+        if (intervalExpression.test(intervalAsString) == false) {
+            throw "Could not interpret '" + intervalAsString + "' as an interval expression";
+        }
+
+        var sharpOrFlat = sharpenOrFlatten(intervalAsString);
+        var numberPortion = sharpOrFlat == 0 ? intervalAsString : intervalAsString.substring(1);
+        var intervalAsInt = parseInt(numberPortion);
+
+        var i = 0;
+        var result = 0;
+        var intervalIndex = 0;
+        while (i < intervalAsInt - 1) {
+            if (i == self.settings.intervals.length) {
+                intervalIndex = 0;
+            }
+            result += self.settings.intervals[intervalIndex];
+            i++;
+            intervalIndex++;
+        }
+        result += sharpOrFlat;
+        return result;
+    };
+
 
     function defaultRender(options) {
         
@@ -197,6 +208,15 @@
     GuitarString.prototype.getNoteAtInterval = function (steps) {
         return this.getNoteAtFret(steps - 1);
     };
+
+    var standardTuning = [
+        new GuitarString('E'),
+        new GuitarString('A'),
+        new GuitarString('D'),
+        new GuitarString('G'),
+        new GuitarString('B'),
+        new GuitarString('E')
+    ];
     
     function Chart(options) {
         var self = this;
@@ -210,7 +230,6 @@
                 container: "table table-striped table-bordered table-hover chord-chart",
                 cell: "chord-chart-cell",
                 formatNote: formatNote
-
             }
         };
 
@@ -220,6 +239,18 @@
         var notes = [];
         var position = 0;
         var intervals = [];
+
+        function updateIntervalsFromNotes() {
+            intervals = notes.map(function(note) {
+                return chromaticScale.noteToInterval(key, note);
+            });            
+        }
+
+        function updateNotesFromIntervals() {
+            notes = intervals.map(function (e) {
+                return chromaticScale.intervalToNote(e, key, settings.mode);
+            });
+        }
 
         function formatNote( note) {
             
@@ -273,25 +304,19 @@
             }
         }
 
+        var intervalExpression = /^(b|#)?\d(,(b|#)?\d)*$/;
+
         function setIntervals(value) {
-            var expression = /^[A-Za-z]:(b|#)?\d(,(b|#)?\d)*$/;
-            
-            if (expression.test(value)) {
-                key = value[0];
-                var keyIndex = chromaticScale.indexOf(key);
-                var map = value.substring(2)
-                    .split(',')
-                    .map(function (e) {
-                        var modeInterval = parseInt(e);
-                        var index = settings.mode.getStepsFromRoot(modeInterval);
-                        var note = chromaticScale.getNoteForStep(index + keyIndex);
-                        return note;
-                    });
+            if ($.isArray(value)) {
+                intervals = value;
 
-                setNotes(map);
-
-            } else {
-                throw "Invalid interval expression";
+            } else if (typeof(value) == 'string') {
+                if (intervalExpression.test(value)) {
+                    intervals = value.split(',');
+                }
+                else {
+                    throw "Invalid interval expression";
+                }
             }
         }
 
@@ -314,6 +339,7 @@
                         return intervals;
                     default:
                         setIntervals(value);
+                        updateNotesFromIntervals();
                         render();
                         break;
                 }
@@ -335,6 +361,7 @@
 
                     default:
                         setNotes(value);
+                        updateIntervalsFromNotes();
                         render();
                         break;
                 }
