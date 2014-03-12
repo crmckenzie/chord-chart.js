@@ -72,6 +72,10 @@
         return false;
     };
 
+    ChromaticScale.prototype.isIntervalExpression = function (interval) {
+        return intervalExpression.test(interval.toString()) == true;
+    };
+    
     ChromaticScale.prototype.intervalToNote = function(interval, key, mode) {
         var steps = mode.getStepsFromRoot(interval);
         var keyRootNoteIndex = this.indexOf(key);
@@ -80,24 +84,35 @@
         return note;
     };
 
-    ChromaticScale.prototype.noteToInterval = function(note, key, model) {
-        return 1;
+    ChromaticScale.prototype.noteToInterval = function (note, key, mode) {
+        var delta = this.deltaNotes(key, note);
+        var steps = 0;
+        var intervalIndex = 0;
+        while (steps < delta) {
+            var interval = mode.intervals(intervalIndex);
+            steps += interval;
+            intervalIndex++;
+        }
+        var flatten = steps > delta ? "b" : "";
+        var result = flatten + (intervalIndex + 1);
+        return result;
     };
 
-    var chromaticScale = new ChromaticScale();
+    ChromaticScale.prototype.deltaNotes = function(left, right) {
+        if (left == right)
+            return 0;
 
-    function Mode(options) {
-        var self = this;
-        
-        var defaults = {
-            intervals: [2, 2, 1, 2, 2, 2, 1] // root: whole whole half whole whole whole half
-        };
-
-        self.settings = $.extend({}, defaults, options);
-
-    }
+        var leftIndex = this.indexOf(left);
+        var rightIndex = this.indexOf(right);
+        if (rightIndex < leftIndex)
+            rightIndex += this.scale.length;
+        return rightIndex - leftIndex;
+    };
 
     var intervalExpression = /^(b|#)?\d+$/;
+
+
+    var chromaticScale = new ChromaticScale();
 
     function sharpenOrFlatten(str) {
         var result = 0;
@@ -110,35 +125,57 @@
         return result;
     }
 
+    function Mode(options) {
+        var self = this;
+        
+        var defaults = {
+            intervals: [2, 2, 1, 2, 2, 2, 1] // root: whole whole half whole whole whole half
+        };
+
+        self.settings = $.extend({}, defaults, options);
+
+    }
+
+    Mode.prototype.intervals = function (indexer) {
+        var self = this;
+        switch(arguments.length) {
+            case 0:
+                return self.settings.intervals;
+            default:
+                return self.settings.intervals[indexer];
+        }
+    };
 
     Mode.prototype.getStepsFromRoot = function (interval) {
         var self = this;
 
-        var intervalAsString = interval.toString();
+        if (chromaticScale.isIntervalExpression(interval)) {
+            interval = interval.toString();
+            var sharpOrFlat = sharpenOrFlatten(interval);
+            var numberPortion = sharpOrFlat == 0 ? interval : interval.substring(1);
+            var intervalAsInt = parseInt(numberPortion);
 
-        if (intervalExpression.test(intervalAsString) == false) {
-            throw "Could not interpret '" + intervalAsString + "' as an interval expression";
-        }
-
-        var sharpOrFlat = sharpenOrFlatten(intervalAsString);
-        var numberPortion = sharpOrFlat == 0 ? intervalAsString : intervalAsString.substring(1);
-        var intervalAsInt = parseInt(numberPortion);
-
-        var i = 0;
-        var result = 0;
-        var intervalIndex = 0;
-        while (i < intervalAsInt - 1) {
-            if (i == self.settings.intervals.length) {
-                intervalIndex = 0;
+            var i = 0;
+            var result = 0;
+            var intervalIndex = 0;
+            while (i < intervalAsInt - 1) {
+                if (i == self.settings.intervals.length) {
+                    intervalIndex = 0;
+                }
+                result += self.settings.intervals[intervalIndex];
+                i++;
+                intervalIndex++;
             }
-            result += self.settings.intervals[intervalIndex];
-            i++;
-            intervalIndex++;
+            result += sharpOrFlat;
+            return result;
         }
-        result += sharpOrFlat;
-        return result;
-    };
+        else
+        {
+            throw "Could not interpret '" + interval + "' as an interval expression";
+        }
 
+ 
+    };
 
     function defaultRender(options) {
         
@@ -242,13 +279,13 @@
 
         function updateIntervalsFromNotes() {
             intervals = notes.map(function(note) {
-                return chromaticScale.noteToInterval(key, note);
+                return chromaticScale.noteToInterval(note, key, settings.mode);
             });            
         }
 
         function updateNotesFromIntervals() {
-            notes = intervals.map(function (e) {
-                return chromaticScale.intervalToNote(e, key, settings.mode);
+            notes = intervals.map(function (interval) {
+                return chromaticScale.intervalToNote(interval, key, settings.mode);
             });
         }
 
@@ -304,14 +341,14 @@
             }
         }
 
-        var intervalExpression = /^(b|#)?\d(,(b|#)?\d)*$/;
+        var intervalsExpression = /^(b|#)?\d(,(b|#)?\d)*$/;
 
         function setIntervals(value) {
             if ($.isArray(value)) {
                 intervals = value;
 
             } else if (typeof(value) == 'string') {
-                if (intervalExpression.test(value)) {
+                if (intervalsExpression.test(value)) {
                     intervals = value.split(',');
                 }
                 else {

@@ -3,7 +3,7 @@
 ///<reference path="chordcharts.js"/>
 module("chord-charts tests");
 
-test("Mode.getStepsFromRoot", function () {
+test("Mode.getStepsFromRoot(interval)", function () {
     var mode = new isg.guitar.Mode();
 
     var expectations = [
@@ -25,6 +25,7 @@ test("Mode.getStepsFromRoot", function () {
         equal(result, expectation.result);
     });
 });
+
 
 
 test("ChromaticScale.indexOf", function() {
@@ -101,24 +102,51 @@ test("ChromaticScale.noteToInterval", function() {
     var scale = new isg.guitar.ChromaticScale();
 
     var expectations = [
-        { arg: 1, result: 'C' },
-        { arg: 2, result: 'D' },
-        { arg: 3, result: 'E' },
-        { arg: 4, result: 'F' },
-        { arg: 5, result: 'G' },
-        { arg: 6, result: 'A' },
-        { arg: 7, result: 'B' },
-        { arg: 8, result: 'C' },
-        { arg: 9, result: 'D' },
-        { arg: 10, result: 'E' },
-        { arg: 11, result: 'F' }
+        { arg:'C', result:'1' },
+        { arg:'C#', result:'b2' },
+        { arg:'D', result:'2' },
+        { arg:'Eb', result:'b3' },
+        { arg:'E', result:'3' },
+        { arg:'F', result:'4' },
+        { arg:'F#', result:'b5' },
+        { arg:'G', result:'5' },
+        { arg:'Ab', result:'b6' },
+        { arg:'A', result:'6' },
+        { arg:'Bb', result:'b7' },
+        { arg:'B', result:'7' },
+        { arg:'C', result:'1' }
     ];
 
     $.each(expectations, function (i, expectation) {
         var mode = new isg.guitar.Mode();
         var key = 'C';
-        var result = scale.intervalToNote(expectation.arg, key, mode);
+        var result = scale.noteToInterval(expectation.arg, key, mode);
         equal(result, expectation.result, expectation.arg);
+    });
+});
+
+test("ChromaticScale.deltaNotes", function () {
+    var scale = new isg.guitar.ChromaticScale();
+
+    var expectations = [
+        { arg: 'C', result: 0 },
+        { arg: 'C#', result: 1 },
+        { arg: 'D', result: 2 },
+        { arg: 'Eb', result: 3 },
+        { arg: 'E', result: 4 },
+        { arg: 'F', result: 5 },
+        { arg: 'F#', result: 6 },
+        { arg: 'G', result: 7 },
+        { arg: 'Ab', result: 8 },
+        { arg: 'A', result: 9 },
+        { arg: 'Bb', result: 10 },
+        { arg: 'B', result: 11 },
+        { arg: 'C', result: 0 }
+    ];
+
+    $.each(expectations, function (i, expectation) {
+        var result = scale.deltaNotes('C', expectation.arg);
+        equal(result, expectation.result);
     });
 });
 
@@ -184,7 +212,7 @@ test("Chart: setting notes also sets intervals", function() {
     chart.notes(value);
 
     var intervals = chart.intervals();
-    deepEqual(intervals, [1, 3, 5]);
+    deepEqual(intervals, ['1', '3', '5']);
 });
 
 test("Chart: set notes as array", function() {
