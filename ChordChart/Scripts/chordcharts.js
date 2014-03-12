@@ -408,7 +408,7 @@
                     case 0:
                         return position;
                     default:
-                        position = value;
+                        position = parseInt(value);
                         render();
                         break;
                 }
@@ -418,7 +418,7 @@
                     case 0:
                         return settings.size;
                     default:
-                        settings.size = value;
+                        settings.size = parseInt(value);
                         render();
                         break;
                 }          
